@@ -5,8 +5,10 @@ import { User } from '../modules/users/entities/user.entity';
 import { MainSeeder } from './seeds/seeder';
 import { UsersFactory } from './factories/users.factory';
 import * as dotenv from 'dotenv';
+
 dotenv.config();
-export const AppDataSource: DataSourceOptions & SeederOptions = {
+
+export const AppDataSourceOptions: DataSourceOptions & SeederOptions = {
   type: 'postgres',
   host: process.env.DATABASE_HOST,
   port: parseInt(process.env.DATABASE_PORT, 10),
@@ -19,9 +21,13 @@ export const AppDataSource: DataSourceOptions & SeederOptions = {
   migrations: ['./src/migrations/**/*{.ts,.js}'],
   synchronize: false,
 };
-const dataSource = new DataSource(AppDataSource);
-dataSource.initialize().then(async () => {
-  await dataSource.synchronize(true);
-  await runSeeders(dataSource);
-  process.exit();
-});
+
+export const AppDataSource = new DataSource(AppDataSourceOptions);
+
+AppDataSource.initialize()
+  .then(async () => {
+    await AppDataSource.synchronize(true);
+    await runSeeders(AppDataSource);
+    process.exit();
+  })
+  .catch((error) => console.log(error));
