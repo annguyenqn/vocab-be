@@ -3,13 +3,17 @@ import {
   Get,
   Post,
   Body,
+  Query,
   // Patch,
   Param,
   Delete,
+  Patch,
 } from '@nestjs/common';
 import { UserService } from './user.service';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiTags, ApiQuery } from '@nestjs/swagger';
 import { CreateUserDto } from './dto/create-user.dto';
+import { GetUsersQueryDto } from './dto/get-user.dto';
+import { UpdateUserDto } from './dto/update-user.dto';
 // import { UpdateUserDto } from './dto/update-user.dto';
 
 @ApiTags('users')
@@ -19,26 +23,38 @@ export class UserController {
 
   @Post()
   create(@Body() createUserDto: CreateUserDto) {
-    return this.userService.create(createUserDto);
+    return this.userService.createUser(createUserDto);
   }
 
   @Get()
-  findAll() {
-    return this.userService.findAll();
+  @ApiQuery({
+    name: 'page',
+    required: false,
+    type: Number,
+    description: 'Page number',
+  })
+  @ApiQuery({
+    name: 'limit',
+    required: false,
+    type: Number,
+    description: 'Number of items per page',
+  })
+  findAll(@Query() query: GetUsersQueryDto) {
+    return this.userService.getUsers(query);
   }
 
   @Get(':id')
   findOne(@Param('id') id: string) {
-    return this.userService.findOne(+id);
+    return this.userService.findUserById(+id);
   }
 
-  // @Patch(':id')
-  // update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
-  //   return this.userService.update(+id, updateUserDto);
-  // }
+  @Patch(':id')
+  update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
+    return this.userService.updateUser(+id, updateUserDto);
+  }
 
   @Delete(':id')
   remove(@Param('id') id: string) {
-    return this.userService.remove(+id);
+    return this.userService.removeUser(+id);
   }
 }
