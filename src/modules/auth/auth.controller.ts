@@ -11,8 +11,21 @@ export class AuthController {
   @ApiBody({ type: LoginDto })
   @Post('login')
   async login(@Body() loginDto: LoginDto) {
-    const { email, password } = loginDto;
-    const user = await this.authService.validateUser(email, password);
-    return this.authService.login(user);
+    return this.authService.login(loginDto);
+  }
+
+  @Post('refresh-token')
+  @ApiOperation({ summary: 'Refresh Token' })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        refreshToken: { type: 'string' },
+      },
+      required: ['refreshToken'],
+    },
+  })
+  refreshToken(@Body('refreshToken') refreshToken: string) {
+    return this.authService.refreshTokens(refreshToken);
   }
 }
