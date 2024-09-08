@@ -42,13 +42,7 @@ export class AuthService {
     const refreshToken = this.createRefreshToken(user.id, user.email);
     return { accessToken, refreshToken };
   }
-  verifyAccessToken(token: string): boolean {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    if (!decoded) {
-      throw new UnauthorizedException('Access token is invalid or expired');
-    }
-    return true;
-  }
+
   async refreshTokens(
     refreshToken: string,
   ): Promise<{ accessToken: string; refreshToken: string }> {
