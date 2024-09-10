@@ -12,10 +12,13 @@ import { Repository } from 'typeorm';
 import { GetUsersQueryDto } from './dto/get-user.dto';
 import { GetUsersResponseDto } from './dto/get-user-res.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { Role } from './entities/role.entity';
+import { RoleName } from '../../common/enums/role-name.enum';
 @Injectable()
 export class UserService {
   constructor(
     @InjectRepository(User) private userRepository: Repository<User>,
+    @InjectRepository(Role) private roleRepository: Repository<Role>,
   ) {}
   async isEmailExist(email: string): Promise<boolean> {
     const user = await this.userRepository.findOne({ where: { email } });
@@ -25,7 +28,10 @@ export class UserService {
     return true;
   }
   async findEmail(email: string) {
-    const user = await this.userRepository.findOne({ where: { email } });
+    const user = await this.userRepository.findOne({
+      where: { email },
+      relations: ['roles'],
+    });
     if (user) {
       return user;
     }
@@ -38,11 +44,29 @@ export class UserService {
       throw new ConflictException(`User with email ${email} already exists`);
     }
     const hashPass = await hashPassword(password);
-    const newUser = this.userRepository.create({
+    const user = this.userRepository.create({
       ...createUserDto,
       password: hashPass,
     });
-    return this.userRepository.save(newUser);
+    await this.userRepository.save(user);
+    const role = this.roleRepository.create({
+      user,
+      roleName: RoleName.USER,
+    });
+    await this.roleRepository.save(role);
+    return user;
+  }
+
+  async addRole(userId: number, roleName: RoleName): Promise<void> {
+    const user = await this.userRepository.findOne({
+      where: { id: userId },
+      relations: ['roles'],
+    });
+    if (!user) {
+      throw new Error('User not found');
+    }
+    const role = this.roleRepository.create({ user, roleName });
+    await this.roleRepository.save(role);
   }
 
   async getUsers(query: GetUsersQueryDto): Promise<GetUsersResponseDto> {

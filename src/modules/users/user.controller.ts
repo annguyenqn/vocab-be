@@ -14,6 +14,8 @@ import { ApiTags, ApiQuery, ApiBearerAuth } from '@nestjs/swagger';
 import { CreateUserDto } from './dto/create-user.dto';
 import { GetUsersQueryDto } from './dto/get-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { RoleName } from '../../common/enums/role-name.enum';
+import { Roles } from 'src/common/decorator/Roles.decorator';
 // import { UpdateUserDto } from './dto/update-user.dto';
 
 @ApiTags('users')
@@ -23,6 +25,7 @@ export class UserController {
   constructor(private readonly userService: UserService) {}
 
   @Post()
+  @Roles(RoleName.ADMIN)
   create(@Body() createUserDto: CreateUserDto) {
     return this.userService.createUser(createUserDto);
   }

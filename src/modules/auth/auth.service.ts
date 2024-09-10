@@ -1,10 +1,17 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { UserService } from '../users/user.service';
 import * as bcrypt from 'bcryptjs';
 import { LoginDto } from './dto/login-dto';
 import * as jwt from 'jsonwebtoken';
 import { JwtPayload } from 'src/types/jwtPayload.type';
+import { SignUpDto } from './dto/signup.dto';
+import { RoleName } from '../../common/enums/role-name.enum';
+
 @Injectable()
 export class AuthService {
   constructor(
@@ -24,6 +31,20 @@ export class AuthService {
     return this.jwtService.sign(payload, {
       secret: process.env.JWT_REFRESH_SECRET,
       expiresIn: '7d',
+    });
+  }
+  async signUp(signUpDto: SignUpDto): Promise<void> {
+    const { email, password, firstName, lastName } = signUpDto;
+    const existingUser = await this.usersService.findEmail(email);
+    if (existingUser) {
+      throw new ConflictException('User already exists');
+    }
+    const hashedPassword = await bcrypt.hash(password, 10);
+    await this.usersService.createUser({
+      email,
+      password: hashedPassword,
+      firstName,
+      lastName,
     });
   }
 
@@ -63,5 +84,8 @@ export class AuthService {
         error,
       );
     }
+  }
+  async assignRole(userId: number, roleName: RoleName): Promise<void> {
+    await this.usersService.addRole(userId, roleName);
   }
 }

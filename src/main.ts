@@ -5,6 +5,8 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { HttpExceptionFilter } from './common/http-exception.filter';
 import { JwtAuthGuard } from './modules/auth/guard/jwt-auth.guard';
 import { Reflector } from '@nestjs/core';
+import { RolesGuard } from './modules/auth/guard/role.guard';
+
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const reflector = app.get(Reflector);
@@ -30,6 +32,7 @@ async function bootstrap() {
   });
   app.useGlobalFilters(new HttpExceptionFilter());
   app.useGlobalGuards(new JwtAuthGuard(reflector));
+  app.useGlobalGuards(new JwtAuthGuard(reflector), new RolesGuard(reflector));
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
